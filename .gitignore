@@ -1,0 +1,35 @@
+# Build outputs
+/build/
+/app/build/
+*.apk
+*.aab
+
+# Gradle
+.gradle/
+local.properties
+
+# IDE
+.idea/
+*.iml
+
+# Model files (too large for git — download via models/download_models.sh or in-app)
+*.gguf
+*.litertlm
+*.safetensors
+*.ckpt
+*.bin
+*.tflite
+*.onnx
+*.onnx.data
+*.pth
+*.pt
+
+# Native library (built from libs/stable-diffusion.cpp)
+app/src/main/jniLibs/
+
+# stable-diffusion.cpp build artifacts
+libs/stable-diffusion.cpp/build-android/
+
+# OS files
+.DS_Store
+Thumbs.db
