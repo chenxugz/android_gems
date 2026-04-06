@@ -33,6 +33,7 @@ data class ComparisonUiState(
     val gemsError: String? = null,
     val gemsStatus: String = "",
     val gemsRoundImages: List<RoundImage> = emptyList(),
+    val gemsUsedSkill: String? = null,
 )
 
 data class RoundImage(
@@ -121,6 +122,7 @@ class ComparisonViewModel @Inject constructor(
                     gemsTotalIterations = result.totalIterations,
                     gemsLoading = false,
                     gemsStatus = "",
+                    gemsUsedSkill = result.usedSkill,
                 )
             }
         } catch (e: Exception) {

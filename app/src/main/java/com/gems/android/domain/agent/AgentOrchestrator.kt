@@ -91,7 +91,7 @@ class AgentOrchestrator @Inject constructor(
             prepareForImageGen()
             val image = imageGen.generate(prompt)
             return AgentResult(image, prompt, 0f, 0,
-                System.currentTimeMillis() - startTime)
+                System.currentTimeMillis() - startTime, lastUsedSkill)
         }
 
         var bestImage: Bitmap? = null
@@ -141,7 +141,7 @@ class AgentOrchestrator @Inject constructor(
                 memory.saveAttempt(sessionId,
                     AttemptRecord(i, currentPrompt, "All passed", passed, failed, image))
                 return AgentResult(image, currentPrompt, 1f, i,
-                    System.currentTimeMillis() - startTime)
+                    System.currentTimeMillis() - startTime, lastUsedSkill)
             }
 
             // Still in LLM phase — summarize + refine WITHOUT switching GPU
@@ -172,13 +172,48 @@ class AgentOrchestrator @Inject constructor(
         val score = maxPassedCount.toFloat() / questions.size
         status("Done! Score: ${(score * 100).toInt()}%")
         return AgentResult(bestImage!!, currentPrompt, score, maxIterations,
-            System.currentTimeMillis() - startTime)
+            System.currentTimeMillis() - startTime, lastUsedSkill)
     }
 
-    // --- Planner ---
-    // Skip skill routing on mobile to save time — directly use the original prompt.
-    // Skill routing adds 2 LLM calls (~4s) and rarely triggers for simple prompts.
+    /** Which skill was triggered, if any. */
+    var lastUsedSkill: String? = null
+        private set
+
+    // --- Planner (Skill Router) ---
     private suspend fun plan(originalPrompt: String): String {
+        lastUsedSkill = null
+        val manifest = skillManager.getSkillManifest()
+        if (manifest.isBlank()) return originalPrompt
+
+        val decisionPrompt = buildString {
+            append("Available Skills:\n$manifest\n")
+            append("User Request: $originalPrompt\n\n")
+            append("If a skill matches, respond with ONLY the SKILL_ID. Otherwise respond NONE.")
+        }
+
+        val skillId = llm.think(
+            userPrompt = decisionPrompt,
+            systemPrompt = systemPromptFor(AgentRole.PLANNER)
+        ).trim().lowercase()
+
+        val instructions = skillManager.getSkillInstructions(skillId)
+        if (instructions != null) {
+            lastUsedSkill = skillId
+            status("Skill triggered: $skillId")
+            Log.d(TAG, "Skill triggered: $skillId")
+            val enhancePrompt = buildString {
+                append("Enhance the user's prompt using these skill instructions.\n")
+                append("### Skill Instructions:\n$instructions\n\n")
+                append("### Original Prompt: $originalPrompt\n\n")
+                append("Return ONLY the enhanced prompt text.")
+            }
+            return llm.think(
+                userPrompt = enhancePrompt,
+                systemPrompt = systemPromptFor(AgentRole.PLANNER)
+            ).trim()
+        }
+
+        status("No skill triggered")
         return originalPrompt
     }
 

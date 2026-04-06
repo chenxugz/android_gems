@@ -37,7 +37,7 @@ fun HomeScreen(
     onNavigateToImageGenDemo: (steps: Int) -> Unit = {},
     onNavigateToModelDownload: () -> Unit = {},
 ) {
-    var prompt by rememberSaveable { mutableStateOf("A book floating in the sky, creative and cool concept, make it look artistic and dreamy.") }
+    var prompt by rememberSaveable { mutableStateOf("a mountain range at sunrise") }
     var steps by rememberSaveable { mutableIntStateOf(1) }
     var iterations by rememberSaveable { mutableIntStateOf(2) }
     var useE4B by rememberSaveable { mutableStateOf(false) }

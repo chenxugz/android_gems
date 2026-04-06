@@ -165,6 +165,7 @@ fun ComparisonScreen(
                 refinedPrompt = uiState.gemsRefinedPrompt,
                 verifierScore = uiState.gemsVerifierScore,
                 totalIterations = uiState.gemsTotalIterations,
+                usedSkill = uiState.gemsUsedSkill,
             )
         }
     }
@@ -261,9 +262,10 @@ private fun GemsMetadataSection(
     refinedPrompt: String?,
     verifierScore: Float?,
     totalIterations: Int?,
+    usedSkill: String? = null,
 ) {
     // Only show when at least one piece of metadata is available
-    if (refinedPrompt == null && verifierScore == null && totalIterations == null) return
+    if (refinedPrompt == null && verifierScore == null && totalIterations == null && usedSkill == null) return
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -280,6 +282,11 @@ private fun GemsMetadataSection(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
+
+            if (usedSkill != null) {
+                MetadataRow(label = "Skill Used", value = usedSkill)
+                Spacer(modifier = Modifier.height(4.dp))
+            }
 
             if (refinedPrompt != null) {
                 MetadataRow(label = "Refined Prompt", value = refinedPrompt)

@@ -34,5 +34,6 @@ data class AgentResult(
     val refinedPrompt: String,
     val verifierScore: Float,
     val totalIterations: Int,
-    val elapsedMs: Long
+    val elapsedMs: Long,
+    val usedSkill: String? = null
 )
