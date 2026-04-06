@@ -14,6 +14,14 @@ GEMS uses an agent loop to iteratively improve text-to-image generation:
 
 The app shows a side-by-side comparison of direct generation vs the GEMS agent loop.
 
+### Example: "a mountain range at sunrise"
+
+| Direct Generation | GEMS Output |
+|---|---|
+| ![Direct](docs/images/direct_mountain_range_at_sunrise.png) | ![GEMS](docs/images/gems_mountain_range_at_sunrise.png) |
+
+The GEMS agent triggered the **landscape** skill, which enhanced the prompt with detailed instructions about atmospheric depth, natural lighting, and composition. The GEMS-enhanced output shows a mountain scene with a lake reflection, wildflowers, and dramatic sky — significantly more detailed than the direct generation.
+
 ## Stack
 
 | Component | Implementation |

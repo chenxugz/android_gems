@@ -1,5 +1,6 @@
 package com.gems.android.ui.screen
 
+import android.content.Context
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,6 +8,9 @@ import com.gems.android.data.engine.LiteRtLmEngine
 import com.gems.android.data.engine.SdCppEngine
 import com.gems.android.domain.agent.AgentOrchestrator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
+import java.io.FileOutputStream
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,7 +52,15 @@ class ComparisonViewModel @Inject constructor(
     private val imageGenEngine: SdCppEngine,
     private val llmEngine: LiteRtLmEngine,
     private val agentOrchestrator: AgentOrchestrator,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
+
+    private fun saveBitmap(bitmap: Bitmap, name: String) {
+        val dir = File(context.getExternalFilesDir(null), "output").also { it.mkdirs() }
+        val file = File(dir, "$name.png")
+        FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        android.util.Log.i("ComparisonVM", "Saved image: ${file.absolutePath}")
+    }
 
     private val _uiState = MutableStateFlow(ComparisonUiState())
     val uiState: StateFlow<ComparisonUiState> = _uiState.asStateFlow()
@@ -84,6 +96,7 @@ class ComparisonViewModel @Inject constructor(
             val start = System.currentTimeMillis()
             val bitmap = imageGenEngine.generate(prompt)
             val elapsed = System.currentTimeMillis() - start
+            saveBitmap(bitmap, "direct")
             _uiState.update {
                 it.copy(directImage = bitmap, directTimeMs = elapsed, directLoading = false)
             }
@@ -103,6 +116,7 @@ class ComparisonViewModel @Inject constructor(
                     _uiState.update { it.copy(gemsStatus = message) }
                 }
                 override fun onRoundImage(round: Int, image: android.graphics.Bitmap, prompt: String, score: Float?) {
+                    saveBitmap(image, "gems_round_$round")
                     _uiState.update { state ->
                         state.copy(
                             gemsImage = image, // always show latest as the main GEMS image
