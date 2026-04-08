@@ -45,11 +45,54 @@ The GEMS agent triggered the **anime (Makoto Shinkai)** skill, which enhanced th
 
 - **Hardware**: Android device with Vulkan GPU support (tested on Pixel 9 / Tensor G4 / Android 16)
 - **Storage**: ~8GB free on device for model files
-- **Host OS**: macOS (Intel or Apple Silicon) or Linux
+
+---
+
+## Using the App
+
+The fastest way to try Android GEMS is to download the prebuilt APK from the [GitHub Releases page](https://github.com/chenxugz/android_gems/releases/latest) and install it directly on your device. No Android Studio or build setup required.
+
+### Install
+1. Download `app-debug.apk` from the [latest release](https://github.com/chenxugz/android_gems/releases/latest)
+2. Transfer it to your device (or download directly on the phone)
+3. Open the APK and allow installation from unknown sources if prompted
+4. Launch **GEMS Android**
+
+### First-time setup: download models
+On first launch, tap **Download Models** on the home screen. The app will download all four models (~7.7 GB total) directly from Hugging Face and store them in app storage:
+
+<p>
+  <img src="docs/images/screenshot_home.png" width="250" alt="Home Screen" />
+  <img src="docs/images/screenshot_download.png" width="250" alt="Model Manager" />
+</p>
+
+- **SD Turbo (Image Generator)** — 1.9 GB
+- **TAESD (Fast Decoder)** — 9 MB
+- **Gemma 4 E2B (LLM — faster)** — 2.4 GB
+- **Gemma 4 E4B (LLM — smarter)** — 3.4 GB
+
+Downloads use Android's `DownloadManager` and continue in the background even if you leave the app.
+
+### Home Screen options
+- **Prompt field** — type any text-to-image prompt
+- **Image gen steps** — 1 (fast, ~15s) / 2 (balanced, ~30s) / 4 (quality, ~60s)
+- **LLM model** — E2B (fast) or E4B (smart)
+- **GEMS iterations slider** — how many refine-and-regenerate cycles (1–5)
+- **Run Android GEMS** — runs direct generation and the GEMS agent loop side by side
+- **Gemma 4 Demo** — test the LLM with streaming text and optional image input
+- **Direct Image Gen Demo** — test image generation standalone
+
+### Run Android GEMS shows
+- **Direct Generation** — baseline image from your prompt
+- **GEMS Rounds** — each round's image side by side with verification scores
+- **GEMS metadata** — refined prompt, final score, total iterations, skill used
+- **Status updates** — live progress of each agent loop step
 
 ---
 
 ## Setup Guide (from scratch)
+
+> Only needed if you want to build from source. To just try the app, use the prebuilt APK above.
 
 ### Step 1: Install Java (JDK 17+)
 
@@ -267,27 +310,6 @@ adb shell am start -n com.gems.android/.ui.MainActivity
 ```
 
 Or just tap the **Android GEMS** icon on your phone.
-
----
-
-## Using the App
-
-### Home Screen
-
-- **Prompt field** — pre-filled with a default prompt, edit as you like
-- **Image gen steps** — 1 (fast, ~15s) / 2 (balanced, ~30s) / 4 (quality, ~60s)
-- **GEMS iterations slider** — how many refine-and-regenerate cycles (1-5)
-- **Run Android GEMS** — runs direct generation and GEMS agent loop side by side
-- **Gemma 4 Demo** — test the LLM with streaming text output
-- **Direct Image Gen Demo** — test image generation standalone
-
-### Run Android GEMS
-
-Shows:
-- **Direct Generation** — baseline image from your prompt
-- **GEMS Rounds** — each round's image side by side with verification scores
-- **GEMS metadata** — refined prompt, final score, total iterations
-- **Status updates** — live progress of each agent loop step
 
 ---
 
