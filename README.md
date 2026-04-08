@@ -34,11 +34,12 @@ The GEMS agent triggered the **anime (Makoto Shinkai)** skill, which enhanced th
 
 | Component | Implementation |
 |---|---|
-| LLM | Gemma 4 E2B via LiteRT-LM (GPU, ~1-2s/call) |
+| LLM | Gemma 4 E2B / E4B via LiteRT-LM (CPU backend + CPU vision — only stable config on Tensor G4) |
 | Image Gen | SD Turbo via stable-diffusion.cpp + Vulkan GPU (~15-30s) |
-| Agent Loop | Kotlin port of GEMS.py (Decompose → Generate → Verify → Refine) |
+| Agent Loop | Kotlin port of GEMS.py (Plan → Decompose → Generate → Verify → Summarize → Refine) |
+| Skills | LLM-based routing over `assets/skills/*/SKILL.md` (landscape, portrait, cinematic, anime) |
 | UI | Jetpack Compose + Material 3 |
-| DI | Hilt |
+| DI | Hilt (KAPT, not KSP) |
 | DB | Room (agent memory persistence) |
 
 ## Requirements
@@ -327,13 +328,17 @@ GPU memory is managed by closing one engine before loading the other — the LLM
 
 ## Model Files on Device
 
-After setup, these files should be at `/data/local/tmp/` on the device:
+When you download models from the in-app **Model Manager**, they are stored in the app's external files directory at:
+`/storage/emulated/0/Android/data/com.gems.android/files/models/`
 
 | File | Size | Format | Purpose |
 |---|---|---|---|
 | `gemma-4-E2B-it.litertlm` | 2.4GB | LiteRT-LM | Gemma 4 E2B multimodal LLM (text + vision) |
+| `gemma-4-E4B-it.litertlm` | 3.4GB | LiteRT-LM | Gemma 4 E4B multimodal LLM (smarter, slower) |
 | `sd_turbo.gguf` | 1.9GB | GGUF Q8 | SD Turbo image generator (1-4 step distilled, 8-bit quantized) |
 | `taesd.safetensors` | 9MB | SafeTensors | Tiny AutoEncoder decoder (10x faster than full VAE) |
+
+The engines also fall back to the internal files dir and `/data/local/tmp/` if you push models manually with `adb push`.
 
 ## Troubleshooting
 
@@ -349,10 +354,10 @@ After setup, these files should be at `/data/local/tmp/` on the device:
 
 | Component | Original GEMS (Server) | Android GEMS (On-Device) |
 |---|---|---|
-| **LLM (MLLM)** | Kimi-K2.5 (cloud API) | Gemma 4 E2B (2.4GB, on-device GPU) |
+| **LLM (MLLM)** | Kimi-K2.5 (cloud API) | Gemma 4 E2B (2.4GB) or E4B (3.4GB), on-device CPU |
 | **Image Generator** | Z-Image-Turbo (cloud API) | SD Turbo Q8 GGUF (1.9GB, Vulkan GPU) |
 | **VAE Decoder** | Full VAE (server) | TAESD tiny decoder (9MB, 10x faster) |
-| **Skill Routing** | LLM-based routing | Skipped on mobile (saves ~4s) |
+| **Skill Routing** | LLM-based routing | LLM-based routing (landscape, portrait, cinematic, anime) |
 | **Max Iterations** | 3 | Configurable 1-5 (default 2) |
 | **Verification** | Multimodal (image + text) | Multimodal (Gemma 4 vision input) |
 | **Runtime** | Python, multiple GPU servers | Kotlin, single mobile device |
@@ -370,8 +375,8 @@ Respond ONLY with the SKILL_ID or NONE."
 ```
 If a skill matches, it enhances the prompt using skill-specific instructions.
 
-**Android GEMS:**
-Skipped on mobile to save ~4s (2 LLM calls). The original prompt is used directly. Skill routing can be re-enabled for complex prompts.
+**Android GEMS (active):**
+Loaded from `assets/skills/*/SKILL.md` at app startup by `SkillManager`. Available skills: **landscape**, **portrait**, **cinematic**, and **anime (Makoto Shinkai style)**. The Planner LLM is asked to pick a matching `SKILL_ID` (or `NONE`); when one matches, the skill's instructions enhance the prompt before generation. The selected skill is shown in the GEMS metadata card on the Comparison screen.
 
 #### 2. Decomposer
 
@@ -487,7 +492,7 @@ Return ONLY the prompt text itself."
 | **Vision in Verifier** | Yes (MLLM sees image) | Yes (Gemma 4 vision) |
 | **Vision in Summarizer** | Yes (image passed) | No (text-only summary) |
 | **Vision in Refiner** | Yes (history images passed) | No (text-only refinement) |
-| **Skill Routing** | Active | Skipped (saves ~4s) |
+| **Skill Routing** | Active | Active (4 skills: landscape, portrait, cinematic, anime) |
 | **think_with_thought** | Separate reasoning channel | Not available (stripped `<think>` blocks) |
 | **GPU Memory** | Multiple server GPUs | Single mobile GPU, engines take turns |
 | **Agent Memory** | In-memory trajectory | Room DB persistence + WorkManager compression |
